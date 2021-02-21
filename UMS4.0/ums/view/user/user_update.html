@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+    	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    	<meta charset="utf-8" />
+    	<title>修改页面</title>
+    	<!-- bootstrap & fontawesome -->
+    	<link rel="stylesheet" href="/css/bootstrap.min.css" />
+    	<link rel="stylesheet" href="/css/fileinput.min.css"/>
+    	<link rel="stylesheet" href="/font-awesome/4.2.0/css/font-awesome.min.css" />
+
+
+    	<!-- text fonts -->
+    	<link rel="stylesheet" href="/fonts/fonts.googleapis.com.css" />
+
+
+    	<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    	<script src="/js/bootstrap.min.js"></script>
+        <script src="/js/jquery-3.5.1.min.js"></script>
+    	<script src="/js/html5shiv.min.js"></script>
+    	<script src="/js/respond.min.js"></script>
+    	<script src="/js/jquery.validate.min.js"></script>
+    	<script src="/js/fileinput.min.js"></script>
+    	<script src="/js/locales/zh.js"></script>
+
+    	<script type="application/javascript">
+
+        // 手机号码验证
+            jQuery.validator.addMethod("isCellphone", function(value, element) {
+                var tel = /^1[0-9]{10}$/;
+                return tel.test(value);
+            });
+         // 身份证号码验证
+            jQuery.validator.addMethod("isIdCard", function(value, element) {
+                var tel = /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/;
+                return tel.test(value);
+            });
+            // 身份证号码验证
+            jQuery.validator.addMethod("isEmail", function(value, element) {
+                var tel = /^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/;
+                return tel.test(value);
+            });
+
+    	   $(function() {
+    	   	//异步通过id获取用户信息
+    	   	$.ajax({
+    	   	    url:"/user/" + $("#id").val(),
+                type:"get",
+                dataType:"json",
+                success:function(data) {
+                    $("#name").val(data.name);
+                    $("#cellphone").val(data.cellphone);
+                    // 身份证号码
+                    $("#idCard").val(data.idCard);
+                    // 电子邮件
+                    $("#email").val(data.email);
+                    var gender = data.gender;
+                    $("#gender").find("option[value=\'"+gender+"\']").attr("selected",true)
+                }
+    	   	});
+    	     $("#myForm").validate({
+                    submitHandler: function() {
+                    var formData = $("#myForm").serialize();
+                    $.ajax({
+                        url:"/user/update",
+                        dataType:"json",
+                        type:"post",
+                        data:formData,
+                        success:function(data){
+                            if (data){
+                            	alert("修改成功！");
+                                parent.location.href = "/";
+                            } else {
+                            	alert("修改失败!");
+                            }
+                        }
+                    })
+                    },
+                    rules:{
+                        name:"required",
+                        cellphone:{
+                        	required:true,
+                        	isCellphone:true,
+                        	remote:{
+                                url:"/user/validation/cellphone",
+                                type:"post",
+                                dataType:"json",
+                                data:{
+                                	cellphone:function() {
+                                	  return $("#cellphone").val();
+                                	},
+                                	  id:function() {
+                                      return $("#id").val();
+                                    }
+                                }
+                        	}
+                        },
+                        idCard:{
+                        	required:true,
+                        	isIdCard:true,
+                        	remote:{
+                        		url:"/user/validation/idCard",
+                                type:"post",
+                                dataType:"json",
+                                data:{
+                                    idCard:function() {
+                                      return $("#idCard").val();
+                                    },
+                                    id:function() {
+                                      return $("#id").val();
+                                    }
+                                }
+                        	}
+                        },
+                        email:{
+                        		required:true,
+                                isEmail:true,
+                                remote:{
+                                    url:"/user/validation/email",
+                                    type:"post",
+                                    dataType:"json",
+                                    data:{
+                                        email:function() {
+                                          return $("#email").val();
+                                        },
+                                          id:function() {
+                                          return $("#id").val();
+                                        }
+                                    }
+                                }
+                        }
+
+                    },
+                    messages:{
+                    	name:"请填写您的姓名",
+                    	cellphone:{
+                    	    required: "请填写您的手机号码",
+                            isCellphone:"请填写正确的手机号码",
+                            remote:"该手机号码已被注册"
+                           	},
+                        idCard:{
+                    		required:"请填写您的身份证号",
+                    		isIdCard:"请填写正确的身份证号码",
+                    		remote:"该身份证号码已被注册！"
+                            },
+                        email:{
+                            required:"请填写您的email",
+                            isEmail:"请填写正确的email",
+                            remote:"该email已被注册！"
+                            }
+                    	}
+    	     })
+    	   });
+
+    	   $(function() {
+    	     $("#fileUpload").fileinput({
+                // 设定显示为中文
+                language: "zh",
+                // 文件上传路径
+                uploadUrl: "/file/upload",
+    	     }).on("fileuploaded", function (event, data) {
+    	     	console.log("data=>")
+    	     	console.log(data);
+                // 获得服务器图片路径
+                var avatarPath = data.response.fileName;
+                $("#avatar").val(avatarPath);
+            })
+    	   })
+        </script>
+
+    </head>
+    <body>
+    <div class="container">
+    			<div class="row">
+    				<div class="col-md-12">
+    					<form id="myForm" role="form">
+    						<table style="border-collapse: separate; border-spacing: 10px;">
+    							<tr>
+
+    								<td style="text-align: right">
+    									<span style="color: red;">*</span>&nbsp;
+    									<i class="fa fa-user"></i>&nbsp;
+    									<label>用户姓名：</label>
+    								</td>
+    								<td>
+    									<input type="hidden" id="id" name="id" th:value="${id}" />
+    									<input type="text" id="name" name="name"  class="form-control" style="width: 300px;" placeholder="请填写您的姓名"/>
+    								</td>
+    								<td style="padding: 0px 5px;">
+    									<label class="error" for="name" style="color: red;"></label>
+    								</td>
+    							</tr>
+    							<tr>
+    								<td style="text-align: right">
+    									<span style="color: red;">*</span>&nbsp;
+    									<i class="fa fa-mobile-phone"></i>&nbsp;
+    									<label>手机号码：</label>
+    								</td>
+    								<td>
+    									<input type="text" id="cellphone" name="cellphone"  class="form-control" style="width: 300px;" placeholder="请填写您的手机号码"/>
+    								</td>
+    								<td style="padding: 0px 5px;">
+    									<label class="error" for="cellphone" style="color: red;"></label>
+    								</td>
+    							</tr>
+    							<tr>
+    								<td style="text-align: right">
+    									<span style="color: red;">*</span>&nbsp;
+    									<i class="fa fa-venus-mars"></i>&nbsp;
+    									<label>性别：</label>
+    								</td>
+    								<td>
+    									<select id="gender" name="gender" class="form-control" style="width: 300px">
+    										<option value="1" >男</option>
+    										<option value="0" >女</option>
+    									</select>
+    								</td>
+    								<td style="padding: 0px 5px;">
+    									<label class="error" for="gender" style="color: red;"></label>
+    								</td>
+    							</tr>
+    							<tr>
+    								<td style="text-align: right">
+    									<span style="color: red;">*</span>&nbsp;
+    									<i class="fa fa-id-card"></i>&nbsp;
+    									<label>身份证号码：</label>
+    								</td>
+    								<td>
+    									<input type="text" id="idCard" name="idCard"  class="form-control" style="width: 300px;" placeholder="请填写您的身份证号码"/>
+    								</td>
+    								<td style="padding: 0px 5px;">
+    									<label class="error" for="idCard" style="color: red;"></label>
+    								</td>
+    							</tr>
+    							<tr>
+    								<td style="text-align: right">
+    									<span style="color: red;">*</span>&nbsp;
+    									<i class="fa fa-envelope"></i>&nbsp;
+    									<label>电子邮件：</label>
+    								</td>
+    								<td>
+    									<input type="text" id="email" name="email" class="form-control" style="width: 300px;" placeholder="请填写您的电子邮件地址"/>
+    								</td>
+    								<td style="padding: 0px 5px;">
+    									<label class="error" for="email" style="color: red;"></label>
+    								</td>
+    							</tr>
+    							<tr>
+    								<td style="text-align: right">
+    									<i class="fa fa-image"></i>&nbsp;
+    									<label>头像：</label>
+    								</td>
+    								<td>
+    									<input type="hidden" id="avatar" name="avatar"/>
+    									<input type="file" id="fileUpload" name="uploadFile" class="form-control" data-show-preview="false" style="width: 300px;"/>
+    								</td>
+    								<td style="padding: 0px 5px;"></td>
+    							</tr>
+    							<tr>
+    								<td colspan="1" style="text-align: right">
+    									<button type="submit" class="btn btn-success">
+    										<i class="fa fa-save"></i>&nbsp;
+    										保存
+    									</button>
+    								</td>
+    							</tr>
+    						</table>
+    					</form>
+    				</div>
+    			</div>
+    		</div>
+
+
+    </body>
+</html>

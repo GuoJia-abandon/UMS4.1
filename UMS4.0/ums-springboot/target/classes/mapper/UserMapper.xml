@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.guo.dao.UserDao">
+  <select id="findListByQuery" parameterType="com.guo.pojo.entity.User" resultMap="resultMap">
+    select
+    u.id,
+    u.name,
+    u.cellphone,
+    u.password,
+    u.gender,
+    u.email,
+    u.avatar,
+    u.status,
+    u.createTime,
+    u.updateTime
+    from
+    sys_user u
+    <where>
+      <trim suffixOverrides="and">
+        <if test="id != null">u.id=#{id} and </if>
+        <if test="name != null">u.name like concat('%', #{name}, '%') and </if>
+        <if test="cellphone != null">u.cellphone=#{cellphone} and </if>
+        <if test="gender != null">u.gender=#{gender} and </if>
+        <if test="email != null">u.email=#{email} and </if>
+        <if test="status != null">u.status=#{status} and </if>
+      </trim>
+    </where>
+  </select>
+
+  <insert id="save" parameterType="User">
+    insert into sys_user(
+    <trim suffixOverrides=",">
+      <if test="name != null">name, </if>
+      <if test="cellphone != null">cellphone, </if>
+      <if test="password != null">password, </if>
+      <if test="gender != null">gender, </if>
+      <if test="email != null">email, </if>
+      <if test="avatar != null">avatar, </if>
+      <if test="status != null">status, </if>
+      <if test="createTime != null">createTime, </if>
+      <if test="updateTime != null">updateTime, </if>
+    </trim>
+    ) values(
+    <trim suffixOverrides=",">
+      <if test="name != null">#{name}, </if>
+      <if test="cellphone != null">#{cellphone}, </if>
+      <if test="password != null">#{password}, </if>
+      <if test="gender != null">#{gender}, </if>
+      <if test="email != null">#{email}, </if>
+      <if test="avatar != null">#{avatar}, </if>
+      <if test="status != null">#{status}, </if>
+      <if test="createTime != null">#{createTime}, </if>
+      <if test="updateTime != null">#{updateTime}, </if>
+    </trim>
+    )
+  </insert>
+
+  <update id="update" parameterType="User">
+    update sys_user
+    <set>
+      <trim suffixOverrides=",">
+        <if test="name != null">name=#{name}, </if>
+        <if test="cellphone != null">cellphone=#{cellphone}, </if>
+        <if test="password != null">password=#{password}, </if>
+        <if test="gender != null">gender=#{gender}, </if>
+        <if test="email != null">email=#{email}, </if>
+        <if test="avatar != null">avatar=#{avatar}, </if>
+        <if test="status != null">status=#{status}, </if>
+        <if test="createTime != null">createTime=#{createTime}, </if>
+        <if test="updateTime != null">updateTime=#{updateTime}, </if>
+      </trim>
+    </set>
+    <where>
+      <trim suffixOverrides="and">
+        <if test="id != null">id=#{id} and </if>
+      </trim>
+    </where>
+  </update>
+
+  <resultMap id="resultMap" type="com.guo.pojo.entity.User">
+    <id property="id" javaType="java.lang.Long" column="id"/>
+    <result property="name" javaType="java.lang.String" column="name"/>
+    <result property="cellphone" javaType="java.lang.String" column="cellphone"/>
+    <result property="password" javaType="java.lang.String" column="password"/>
+    <result property="gender" javaType="java.lang.Integer" column="gender"/>
+    <result property="email" javaType="java.lang.String" column="email"/>
+    <result property="avatar" javaType="java.lang.String" column="avatar"/>
+    <result property="status" javaType="java.lang.Integer" column="status"/>
+    <result property="createTime" javaType="java.util.Date" column="createTime"/>
+    <result property="updateTime" javaType="java.util.Date" column="updateTime"/>
+  </resultMap>
+</mapper>
